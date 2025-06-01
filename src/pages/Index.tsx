@@ -1,12 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+
+import Header from '../components/Header';
+import Footer from '../components/Footer';
+import FeaturedListings from '../components/FeaturedListings';
+import InspirationSection from '../components/InspirationSection';
+import BecomeHostPopup from '../components/BecomeHostPopup';
+import LanguagePopup from '../components/LanguagePopup';
+import { useState } from 'react';
 
 const Index = () => {
+  const [showHostPopup, setShowHostPopup] = useState(false);
+  const [showLanguagePopup, setShowLanguagePopup] = useState(false);
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold mb-4">Welcome to Your Blank App</h1>
-        <p className="text-xl text-gray-600">Start building your amazing project here!</p>
-      </div>
+    <div className="min-h-screen bg-white">
+      <Header 
+        onBecomeHost={() => setShowHostPopup(true)}
+        onLanguageSelect={() => setShowLanguagePopup(true)}
+      />
+      
+      <main className="pt-20">
+        <FeaturedListings />
+        <InspirationSection />
+      </main>
+      
+      <Footer onLanguageSelect={() => setShowLanguagePopup(true)} />
+      
+      <BecomeHostPopup 
+        isOpen={showHostPopup} 
+        onClose={() => setShowHostPopup(false)} 
+      />
+      
+      <LanguagePopup 
+        isOpen={showLanguagePopup} 
+        onClose={() => setShowLanguagePopup(false)} 
+      />
     </div>
   );
 };
