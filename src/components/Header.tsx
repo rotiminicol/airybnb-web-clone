@@ -3,6 +3,9 @@ import { useState } from 'react';
 import { Heart, Search, ChevronDown } from 'lucide-react';
 import { Link, useLocation } from 'react-router-dom';
 import SearchPopup from './SearchPopup';
+import LoginSignupModal from './LoginSignupModal';
+import { useAuth } from '../contexts/AuthContext';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 
 interface HeaderProps {
   onBecomeHost: () => void;
@@ -11,12 +14,24 @@ interface HeaderProps {
 
 const Header = ({ onBecomeHost, onLanguageSelect }: HeaderProps) => {
   const [showSearch, setShowSearch] = useState(false);
+  const [showLoginModal, setShowLoginModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
   const location = useLocation();
+  const { user, isAuthenticated, logout } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
     if (path !== '/' && location.pathname.startsWith(path)) return true;
     return false;
+  };
+
+  const handleUserDropdownToggle = () => {
+    setShowUserDropdown(!showUserDropdown);
+  };
+
+  const handleLogout = () => {
+    logout();
+    setShowUserDropdown(false);
   };
 
   return (
@@ -97,17 +112,82 @@ const Header = ({ onBecomeHost, onLanguageSelect }: HeaderProps) => {
                 </svg>
               </button>
 
-              <button className="flex items-center bg-white border border-gray-300 rounded-full p-2 hover:shadow-md transition-shadow">
-                <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
-                  <span className="text-white text-sm">👤</span>
-                </div>
-              </button>
+              {/* User Authentication Section */}
+              {isAuthenticated ? (
+                <Popover open={showUserDropdown} onOpenChange={setShowUserDropdown}>
+                  <PopoverTrigger asChild>
+                    <button 
+                      onClick={handleUserDropdownToggle}
+                      className="flex items-center bg-white border border-gray-300 rounded-full p-2 hover:shadow-md transition-shadow"
+                    >
+                      <svg className="w-4 h-4 text-gray-700 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                      </svg>
+                      <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                        {user?.avatar ? (
+                          <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
+                        ) : (
+                          <span className="text-white text-sm">
+                            {user?.name?.charAt(0).toUpperCase() || '👤'}
+                          </span>
+                        )}
+                      </div>
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-56 p-0 mr-4" align="end">
+                    <div className="py-2">
+                      <div className="px-4 py-2 border-b">
+                        <p className="font-medium text-gray-900">{user?.name}</p>
+                        <p className="text-sm text-gray-600">{user?.email}</p>
+                      </div>
+                      <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                        Account
+                      </button>
+                      <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                        Your reservations
+                      </button>
+                      <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                        Wishlists
+                      </button>
+                      <button 
+                        onClick={onBecomeHost}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                      >
+                        Become a Host
+                      </button>
+                      <hr className="my-1" />
+                      <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                        Help
+                      </button>
+                      <button 
+                        onClick={handleLogout}
+                        className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100"
+                      >
+                        Log out
+                      </button>
+                    </div>
+                  </PopoverContent>
+                </Popover>
+              ) : (
+                <button 
+                  onClick={() => setShowLoginModal(true)}
+                  className="flex items-center bg-white border border-gray-300 rounded-full p-2 hover:shadow-md transition-shadow"
+                >
+                  <svg className="w-4 h-4 text-gray-700 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                  </svg>
+                  <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
+                    <span className="text-white text-sm">👤</span>
+                  </div>
+                </button>
+              )}
             </div>
           </div>
         </div>
       </header>
 
       <SearchPopup isOpen={showSearch} onClose={() => setShowSearch(false)} />
+      <LoginSignupModal isOpen={showLoginModal} onClose={() => setShowLoginModal(false)} />
     </>
   );
 };
