@@ -6,6 +6,7 @@ import SearchPopup from './SearchPopup';
 import LoginSignupModal from './LoginSignupModal';
 import { useAuth } from '../contexts/AuthContext';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 interface HeaderProps {
   onBecomeHost: () => void;
@@ -17,7 +18,7 @@ const Header = ({ onBecomeHost, onLanguageSelect }: HeaderProps) => {
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
   const location = useLocation();
-  const { user, isAuthenticated, logout } = useAuth();
+  const { user, profile, isAuthenticated, signOut } = useAuth();
 
   const isActive = (path: string) => {
     if (path === '/' && location.pathname === '/') return true;
@@ -30,8 +31,28 @@ const Header = ({ onBecomeHost, onLanguageSelect }: HeaderProps) => {
   };
 
   const handleLogout = () => {
-    logout();
+    signOut();
     setShowUserDropdown(false);
+  };
+
+  const getDisplayName = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name} ${profile.last_name}`;
+    }
+    if (profile?.first_name) {
+      return profile.first_name;
+    }
+    return user?.email?.split('@')[0] || 'User';
+  };
+
+  const getUserInitials = () => {
+    if (profile?.first_name && profile?.last_name) {
+      return `${profile.first_name.charAt(0)}${profile.last_name.charAt(0)}`.toUpperCase();
+    }
+    if (profile?.first_name) {
+      return profile.first_name.charAt(0).toUpperCase();
+    }
+    return user?.email?.charAt(0).toUpperCase() || 'U';
   };
 
   return (
@@ -123,21 +144,18 @@ const Header = ({ onBecomeHost, onLanguageSelect }: HeaderProps) => {
                       <svg className="w-4 h-4 text-gray-700 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
                       </svg>
-                      <div className="w-8 h-8 bg-gray-400 rounded-full flex items-center justify-center">
-                        {user?.avatar ? (
-                          <img src={user.avatar} alt={user.name} className="w-full h-full rounded-full object-cover" />
-                        ) : (
-                          <span className="text-white text-sm">
-                            {user?.name?.charAt(0).toUpperCase() || '👤'}
-                          </span>
-                        )}
-                      </div>
+                      <Avatar className="w-8 h-8">
+                        <AvatarImage src={profile?.avatar_url || ''} alt={getDisplayName()} />
+                        <AvatarFallback className="bg-gray-400 text-white text-sm">
+                          {getUserInitials()}
+                        </AvatarFallback>
+                      </Avatar>
                     </button>
                   </PopoverTrigger>
                   <PopoverContent className="w-56 p-0 mr-4" align="end">
                     <div className="py-2">
                       <div className="px-4 py-2 border-b">
-                        <p className="font-medium text-gray-900">{user?.name}</p>
+                        <p className="font-medium text-gray-900">{getDisplayName()}</p>
                         <p className="text-sm text-gray-600">{user?.email}</p>
                       </div>
                       <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
