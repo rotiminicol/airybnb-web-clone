@@ -1,6 +1,7 @@
 
 import { Heart, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
+import { Link } from 'react-router-dom';
 
 const FeaturedListings = () => {
   const [favorites, setFavorites] = useState<number[]>([]);
@@ -131,12 +132,12 @@ const FeaturedListings = () => {
   ];
 
   const ListingCard = ({ listing }: { listing: typeof londonListings[0] }) => (
-    <div className="group flex-shrink-0 w-80 cursor-pointer">
+    <Link to={`/property/${listing.id}`} className="group flex-shrink-0 w-80 cursor-pointer">
       <div className="relative mb-3">
         <img 
           src={listing.image} 
           alt={`${listing.type} in ${listing.location}`}
-          className="w-full h-72 object-cover rounded-lg"
+          className="w-full h-72 object-cover rounded-lg group-hover:scale-105 transition-transform duration-200"
         />
         {listing.isGuestFavorite && (
           <div className="absolute top-3 left-3 bg-white rounded-full px-3 py-1 text-xs font-medium">
@@ -144,7 +145,10 @@ const FeaturedListings = () => {
           </div>
         )}
         <button 
-          onClick={() => toggleFavorite(listing.id)}
+          onClick={(e) => {
+            e.preventDefault();
+            toggleFavorite(listing.id);
+          }}
           className="absolute top-3 right-3 p-2 hover:scale-110 transition-transform"
         >
           <Heart 
@@ -159,7 +163,7 @@ const FeaturedListings = () => {
       
       <div className="space-y-1">
         <div className="flex justify-between items-start">
-          <h3 className="font-medium text-gray-900">{listing.type} in {listing.location}</h3>
+          <h3 className="font-medium text-gray-900 group-hover:underline">{listing.type} in {listing.location}</h3>
           <div className="flex items-center">
             <span className="text-sm">⭐</span>
             <span className="text-sm font-medium ml-1">{listing.rating}</span>
@@ -171,25 +175,29 @@ const FeaturedListings = () => {
           <span className="text-gray-600 font-normal"> for 2 nights</span>
         </p>
       </div>
-    </div>
+    </Link>
   );
 
   const ListingSection = ({ 
     title, 
-    listings 
+    listings,
+    linkTo 
   }: { 
     title: string; 
-    listings: typeof londonListings 
+    listings: typeof londonListings;
+    linkTo: string;
   }) => (
     <div className="mb-12">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900 flex items-center">
-          {title}
-          <ChevronRight className="w-6 h-6 ml-2 text-gray-600" />
-        </h2>
+        <Link to={linkTo} className="group">
+          <h2 className="text-2xl font-semibold text-gray-900 flex items-center group-hover:underline">
+            {title}
+            <ChevronRight className="w-6 h-6 ml-2 text-gray-600" />
+          </h2>
+        </Link>
       </div>
       
-      <div className="flex space-x-6 overflow-x-auto pb-4">
+      <div className="flex space-x-6 overflow-x-auto pb-4 scrollbar-hide">
         {listings.map(listing => (
           <ListingCard key={listing.id} listing={listing} />
         ))}
@@ -199,9 +207,21 @@ const FeaturedListings = () => {
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <ListingSection title="Popular homes in London" listings={londonListings} />
-      <ListingSection title="Stay in Lekki" listings={lekkiListings} />
-      <ListingSection title="Available next month in Nairobi" listings={nairobiListings} />
+      <ListingSection 
+        title="Popular homes in London" 
+        listings={londonListings} 
+        linkTo="/properties/london"
+      />
+      <ListingSection 
+        title="Stay in Lekki" 
+        listings={lekkiListings} 
+        linkTo="/properties/lekki"
+      />
+      <ListingSection 
+        title="Available next month in Nairobi" 
+        listings={nairobiListings} 
+        linkTo="/properties/nairobi"
+      />
     </div>
   );
 };

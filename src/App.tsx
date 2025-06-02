@@ -8,6 +8,8 @@ import { AuthProvider } from "./contexts/AuthContext";
 import Index from "./pages/Index";
 import Experiences from "./pages/Experiences";
 import Services from "./pages/Services";
+import PropertyListings from "./pages/PropertyListings";
+import PropertyDetail from "./pages/PropertyDetail";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -23,6 +25,8 @@ const App = () => (
             <Route path="/" element={<Index />} />
             <Route path="/experiences" element={<Experiences />} />
             <Route path="/services" element={<Services />} />
+            <Route path="/properties/:location" element={<PropertyListings />} />
+            <Route path="/property/:id" element={<PropertyDetail />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
