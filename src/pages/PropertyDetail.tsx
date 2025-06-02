@@ -4,6 +4,7 @@ import { Heart, Star, Share, ChevronLeft, ChevronRight } from 'lucide-react';
 import Header from '../components/Header';
 import BecomeHostPopup from '../components/BecomeHostPopup';
 import LanguagePopup from '../components/LanguagePopup';
+import PaymentModal from '../components/PaymentModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProperty } from '@/hooks/useProperties';
@@ -18,11 +19,13 @@ const PropertyDetail = () => {
   const { toast } = useToast();
   const [showHostPopup, setShowHostPopup] = useState(false);
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
   const [checkIn, setCheckIn] = useState('');
   const [checkOut, setCheckOut] = useState('');
   const [guests, setGuests] = useState(1);
+  const [createdBooking, setCreatedBooking] = useState<any>(null);
 
   const { data: property, isLoading } = useProperty(id || '');
   const { data: favorites } = useFavorites();
@@ -61,6 +64,26 @@ const PropertyDetail = () => {
       check_out: checkOut,
       guests,
       total_price: totalPrice,
+    }, {
+      onSuccess: (booking) => {
+        setCreatedBooking({
+          ...booking,
+          property_title: property?.title,
+          total_price: totalPrice
+        });
+        setShowPaymentModal(true);
+      }
+    });
+  };
+
+  const handlePaymentSuccess = () => {
+    setCreatedBooking(null);
+    setCheckIn('');
+    setCheckOut('');
+    setGuests(1);
+    toast({
+      title: "Booking Confirmed!",
+      description: "Your booking has been successfully confirmed and paid.",
     });
   };
 
@@ -351,7 +374,7 @@ const PropertyDetail = () => {
                       disabled={isBooking}
                       className="w-full bg-[#FF5A5F] hover:bg-[#e04347] text-white py-3"
                     >
-                      {isBooking ? 'Booking...' : 'Reserve'}
+                      {isBooking ? 'Creating Booking...' : 'Reserve'}
                     </Button>
 
                     <p className="text-center text-sm text-gray-600">You won't be charged yet</p>
@@ -385,6 +408,15 @@ const PropertyDetail = () => {
         isOpen={showLanguagePopup} 
         onClose={() => setShowLanguagePopup(false)} 
       />
+
+      {createdBooking && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => setShowPaymentModal(false)}
+          booking={createdBooking}
+          onPaymentSuccess={handlePaymentSuccess}
+        />
+      )}
     </div>
   );
 };

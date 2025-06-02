@@ -1,3 +1,4 @@
+
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Heart, Map, ChevronRight } from 'lucide-react';
@@ -151,27 +152,28 @@ const PropertyListings = () => {
                     }`} 
                   />
                 </button>
-              </div>
-              
-              <div className="space-y-1">
-                <div className="flex justify-between items-start">
-                  <h3 className="font-medium text-gray-900 group-hover:underline">{property.title}</h3>
-                  <div className="flex items-center">
-                    <span className="text-sm">⭐</span>
-                    <span className="text-sm font-medium ml-1">{property.rating || 4.5}</span>
-                    <span className="text-sm text-gray-500 ml-1">({property.review_count || 0})</span>
-                  </div>
                 </div>
-                <p className="text-gray-600 text-sm">{property.property_type} • {property.max_guests} guests</p>
-                <p className="font-medium">
-                  <span className="text-gray-900">${property.price_per_night}</span>
-                  <span className="text-gray-600 font-normal"> night</span>
-                </p>
-              </div>
-            </Link>
-          ))}
+                
+                <div className="space-y-1">
+                  <div className="flex justify-between items-start">
+                    <h3 className="font-medium text-gray-900 group-hover:underline">{property.title}</h3>
+                    <div className="flex items-center">
+                      <span className="text-sm">⭐</span>
+                      <span className="text-sm font-medium ml-1">{property.rating || 4.5}</span>
+                      <span className="text-sm text-gray-500 ml-1">({property.review_count || 0})</span>
+                    </div>
+                  </div>
+                  <p className="text-gray-600 text-sm">{property.property_type} • {property.max_guests} guests</p>
+                  <p className="font-medium">
+                    <span className="text-gray-900">${property.price_per_night}</span>
+                    <span className="text-gray-600 font-normal"> night</span>
+                  </p>
+                </div>
+              </Link>
+            ))}
+          </div>
         </div>
-      </div>
+      </main>
       
       <BecomeHostPopup 
         isOpen={showHostPopup} 
