@@ -7,48 +7,112 @@ import BecomeHostPopup from '../components/BecomeHostPopup';
 import LanguagePopup from '../components/LanguagePopup';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import { useProperty } from '@/hooks/useProperties';
+import { useFavorites } from '@/hooks/useFavorites';
+import { useCreateBooking } from '@/hooks/useBookings';
+import { useAuth } from '@/contexts/AuthContext';
+import { useToast } from '@/hooks/use-toast';
 
 const PropertyDetail = () => {
   const { id } = useParams();
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [showHostPopup, setShowHostPopup] = useState(false);
   const [showLanguagePopup, setShowLanguagePopup] = useState(false);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const [showAllPhotos, setShowAllPhotos] = useState(false);
-  const [isFavorite, setIsFavorite] = useState(false);
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState(1);
 
-  // Sample property data - in a real app this would come from the API
-  const property = {
-    id: id,
-    title: "Private Double Room near Tower Bridge",
-    location: "Room in Greater London, United Kingdom",
-    bedInfo: "1 double bed • Shared bathroom",
-    rating: 4.97,
-    reviewCount: 276,
-    host: {
-      name: "Shawn",
-      avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face",
-      isVerified: true,
-      joinDate: "2019"
-    },
-    images: [
-      "https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1500673922987-e212871fec22?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1472396961693-142e6e269027?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1518770660439-4636190af475?w=800&h=600&fit=crop",
-      "https://images.unsplash.com/photo-1488590528505-98d2b5aba04b?w=800&h=600&fit=crop"
-    ],
-    price: 103,
-    isRareFind: true,
-    description: "Enjoy a peaceful stay in this comfortable private double room located just minutes from Tower Bridge. The room features a comfortable double bed, workspace, and access to shared facilities. Perfect for solo travelers or couples looking to explore London."
+  const { data: property, isLoading } = useProperty(id || '');
+  const { favorites, toggleFavorite } = useFavorites();
+  const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
+
+  const isFavorite = favorites.some(f => f.property_id === id);
+
+  const handleBooking = () => {
+    if (!user) {
+      toast({
+        title: "Please log in",
+        description: "You need to be logged in to make a booking.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!checkIn || !checkOut) {
+      toast({
+        title: "Please select dates",
+        description: "Please select check-in and check-out dates.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const nights = Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    const totalPrice = nights * Number(property?.price_per_night || 0);
+
+    createBooking({
+      property_id: id,
+      check_in: checkIn,
+      check_out: checkOut,
+      guests,
+      total_price: totalPrice,
+      guest_id: user.id,
+    });
   };
 
-  const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % property.images.length);
-  };
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header 
+          onBecomeHost={() => setShowHostPopup(true)}
+          onLanguageSelect={() => setShowLanguagePopup(true)}
+        />
+        <main className="pt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="animate-pulse space-y-6">
+              <div className="h-8 bg-gray-200 rounded w-1/2"></div>
+              <div className="h-96 bg-gray-200 rounded-lg"></div>
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                <div className="lg:col-span-2 space-y-6">
+                  <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                  <div className="h-20 bg-gray-200 rounded"></div>
+                </div>
+                <div className="h-96 bg-gray-200 rounded-lg"></div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
 
-  const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + property.images.length) % property.images.length);
-  };
+  if (!property) {
+    return (
+      <div className="min-h-screen bg-white">
+        <Header 
+          onBecomeHost={() => setShowHostPopup(true)}
+          onLanguageSelect={() => setShowLanguagePopup(true)}
+        />
+        <main className="pt-20">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+            <div className="text-center">
+              <h1 className="text-2xl font-semibold text-gray-900 mb-4">Property not found</h1>
+              <Link to="/" className="text-[#FF5A5F] hover:underline">
+                Return to homepage
+              </Link>
+            </div>
+          </div>
+        </main>
+      </div>
+    );
+  }
+
+  const images = property.images || ["https://images.unsplash.com/photo-1506744038136-46273834b3fb?w=800&h=600&fit=crop"];
 
   return (
     <div className="min-h-screen bg-white">
@@ -63,7 +127,7 @@ const PropertyDetail = () => {
           <div className="flex items-center text-sm text-gray-600">
             <Link to="/" className="hover:underline">Home</Link>
             <ChevronRight className="w-4 h-4 mx-2" />
-            <Link to="/properties/london" className="hover:underline">London</Link>
+            <Link to={`/properties/${property.city.toLowerCase()}`} className="hover:underline">{property.city}</Link>
             <ChevronRight className="w-4 h-4 mx-2" />
             <span className="text-gray-900">Property</span>
           </div>
@@ -77,8 +141,8 @@ const PropertyDetail = () => {
               <div className="flex items-center space-x-4 text-sm">
                 <div className="flex items-center">
                   <Star className="w-4 h-4 fill-current text-black mr-1" />
-                  <span className="font-medium">{property.rating}</span>
-                  <span className="text-gray-600 ml-1">({property.reviewCount} reviews)</span>
+                  <span className="font-medium">{property.rating || 4.5}</span>
+                  <span className="text-gray-600 ml-1">({property.review_count || 0} reviews)</span>
                 </div>
                 <span className="text-gray-600">•</span>
                 <span className="text-gray-600 underline">{property.location}</span>
@@ -92,7 +156,7 @@ const PropertyDetail = () => {
               </Button>
               <Button 
                 variant="ghost" 
-                onClick={() => setIsFavorite(!isFavorite)}
+                onClick={() => user && toggleFavorite({ propertyId: property.id })}
                 className="flex items-center"
               >
                 <Heart className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
@@ -105,7 +169,7 @@ const PropertyDetail = () => {
           <div className="mb-8">
             {showAllPhotos ? (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {property.images.map((image, index) => (
+                {images.map((image, index) => (
                   <img 
                     key={index}
                     src={image} 
@@ -125,43 +189,57 @@ const PropertyDetail = () => {
               <div className="grid grid-cols-1 md:grid-cols-4 gap-2 h-64 md:h-96">
                 <div className="md:col-span-2 relative">
                   <img 
-                    src={property.images[0]} 
+                    src={images[0]} 
                     alt="Main property image"
                     className="w-full h-full object-cover rounded-l-lg md:rounded-lg"
                   />
                 </div>
-                <div className="hidden md:grid grid-rows-2 gap-2">
-                  <img 
-                    src={property.images[1]} 
-                    alt="Property image 2"
-                    className="w-full h-full object-cover"
-                  />
-                  <img 
-                    src={property.images[2]} 
-                    alt="Property image 3"
-                    className="w-full h-full object-cover"
-                  />
-                </div>
-                <div className="hidden md:grid grid-rows-2 gap-2">
-                  <img 
-                    src={property.images[3]} 
-                    alt="Property image 4"
-                    className="w-full h-full object-cover rounded-tr-lg"
-                  />
-                  <div className="relative">
-                    <img 
-                      src={property.images[4]} 
-                      alt="Property image 5"
-                      className="w-full h-full object-cover rounded-br-lg"
-                    />
-                    <Button 
-                      onClick={() => setShowAllPhotos(true)}
-                      className="absolute bottom-4 right-4 bg-white text-black border border-gray-300 hover:bg-gray-50"
-                    >
-                      Show all photos
-                    </Button>
-                  </div>
-                </div>
+                {images.length > 1 && (
+                  <>
+                    <div className="hidden md:grid grid-rows-2 gap-2">
+                      {images[1] && (
+                        <img 
+                          src={images[1]} 
+                          alt="Property image 2"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                      {images[2] && (
+                        <img 
+                          src={images[2]} 
+                          alt="Property image 3"
+                          className="w-full h-full object-cover"
+                        />
+                      )}
+                    </div>
+                    <div className="hidden md:grid grid-rows-2 gap-2">
+                      {images[3] && (
+                        <img 
+                          src={images[3]} 
+                          alt="Property image 4"
+                          className="w-full h-full object-cover rounded-tr-lg"
+                        />
+                      )}
+                      <div className="relative">
+                        {images[4] && (
+                          <img 
+                            src={images[4]} 
+                            alt="Property image 5"
+                            className="w-full h-full object-cover rounded-br-lg"
+                          />
+                        )}
+                        {images.length > 4 && (
+                          <Button 
+                            onClick={() => setShowAllPhotos(true)}
+                            className="absolute bottom-4 right-4 bg-white text-black border border-gray-300 hover:bg-gray-50"
+                          >
+                            Show all photos
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -170,10 +248,10 @@ const PropertyDetail = () => {
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             <div className="lg:col-span-2">
               <div className="border-b border-gray-200 pb-6 mb-6">
-                <h2 className="text-xl font-semibold mb-2">{property.location}</h2>
-                <p className="text-gray-600 mb-4">{property.bedInfo}</p>
+                <h2 className="text-xl font-semibold mb-2">{property.property_type} in {property.location}</h2>
+                <p className="text-gray-600 mb-4">{property.max_guests} guests • {property.bedrooms} bedrooms • {property.bathrooms} bathrooms</p>
                 
-                {property.isRareFind && (
+                {property.is_guest_favorite && (
                   <div className="flex items-center space-x-2 mb-4">
                     <div className="flex items-center space-x-2">
                       <div className="w-6 h-6 rounded-full bg-gradient-to-r from-pink-500 to-purple-500 flex items-center justify-center">
@@ -189,13 +267,13 @@ const PropertyDetail = () => {
               <div className="border-b border-gray-200 pb-6 mb-6">
                 <div className="flex items-center space-x-4">
                   <img 
-                    src={property.host.avatar} 
-                    alt={property.host.name}
+                    src={property.profiles?.avatar_url || `https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face`} 
+                    alt={`${property.profiles?.first_name} ${property.profiles?.last_name}`}
                     className="w-12 h-12 rounded-full object-cover"
                   />
                   <div>
-                    <h3 className="font-medium">Hosted by {property.host.name}</h3>
-                    <p className="text-gray-600 text-sm">Joined in {property.host.joinDate}</p>
+                    <h3 className="font-medium">Hosted by {property.profiles?.first_name} {property.profiles?.last_name}</h3>
+                    <p className="text-gray-600 text-sm">Superhost</p>
                   </div>
                 </div>
               </div>
@@ -203,6 +281,19 @@ const PropertyDetail = () => {
               <div className="border-b border-gray-200 pb-6 mb-6">
                 <p className="text-gray-700 leading-relaxed">{property.description}</p>
               </div>
+
+              {property.amenities && property.amenities.length > 0 && (
+                <div className="border-b border-gray-200 pb-6 mb-6">
+                  <h3 className="text-xl font-semibold mb-4">What this place offers</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {property.amenities.map((amenity: string, index: number) => (
+                      <div key={index} className="flex items-center space-x-3">
+                        <span className="text-gray-700">{amenity}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Booking Card */}
@@ -211,13 +302,13 @@ const PropertyDetail = () => {
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center">
-                      <span className="text-2xl font-semibold">${property.price}</span>
+                      <span className="text-2xl font-semibold">${property.price_per_night}</span>
                       <span className="text-gray-600 ml-1">night</span>
                     </div>
                     <div className="flex items-center">
                       <Star className="w-4 h-4 fill-current text-black mr-1" />
-                      <span className="font-medium">{property.rating}</span>
-                      <span className="text-gray-600 ml-1">({property.reviewCount})</span>
+                      <span className="font-medium">{property.rating || 4.5}</span>
+                      <span className="text-gray-600 ml-1">({property.review_count || 0})</span>
                     </div>
                   </div>
 
@@ -225,24 +316,59 @@ const PropertyDetail = () => {
                     <div className="grid grid-cols-2 border rounded-lg">
                       <div className="p-3 border-r">
                         <label className="text-xs font-medium text-gray-600 uppercase">Check-in</label>
-                        <div className="text-sm">Add date</div>
+                        <input 
+                          type="date" 
+                          value={checkIn}
+                          onChange={(e) => setCheckIn(e.target.value)}
+                          className="text-sm w-full border-none outline-none"
+                        />
                       </div>
                       <div className="p-3">
                         <label className="text-xs font-medium text-gray-600 uppercase">Checkout</label>
-                        <div className="text-sm">Add date</div>
+                        <input 
+                          type="date" 
+                          value={checkOut}
+                          onChange={(e) => setCheckOut(e.target.value)}
+                          className="text-sm w-full border-none outline-none"
+                        />
                       </div>
                     </div>
 
                     <div className="border rounded-lg p-3">
                       <label className="text-xs font-medium text-gray-600 uppercase">Guests</label>
-                      <div className="text-sm">1 guest</div>
+                      <select 
+                        value={guests}
+                        onChange={(e) => setGuests(Number(e.target.value))}
+                        className="text-sm w-full border-none outline-none"
+                      >
+                        {Array.from({ length: property.max_guests }, (_, i) => i + 1).map(num => (
+                          <option key={num} value={num}>{num} guest{num > 1 ? 's' : ''}</option>
+                        ))}
+                      </select>
                     </div>
 
-                    <Button className="w-full bg-[#FF5A5F] hover:bg-[#e04347] text-white py-3">
-                      Reserve
+                    <Button 
+                      onClick={handleBooking}
+                      disabled={isBooking}
+                      className="w-full bg-[#FF5A5F] hover:bg-[#e04347] text-white py-3"
+                    >
+                      {isBooking ? 'Booking...' : 'Reserve'}
                     </Button>
 
                     <p className="text-center text-sm text-gray-600">You won't be charged yet</p>
+
+                    {checkIn && checkOut && (
+                      <div className="border-t pt-4 space-y-2">
+                        <div className="flex justify-between">
+                          <span>${property.price_per_night} x {Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24))} nights</span>
+                          <span>${Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)) * Number(property.price_per_night)}</span>
+                        </div>
+                        <div className="flex justify-between font-semibold">
+                          <span>Total</span>
+                          <span>${Math.ceil((new Date(checkOut).getTime() - new Date(checkIn).getTime()) / (1000 * 60 * 60 * 24)) * Number(property.price_per_night)}</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </CardContent>
               </Card>
