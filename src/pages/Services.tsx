@@ -1,4 +1,3 @@
-
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ServiceCard from '../components/ServiceCard';
@@ -14,8 +13,8 @@ const Services = () => {
 
   // Group services by category
   const photographyServices = services?.filter(service => service.category === 'photography') || [];
-  const fitnessServices = services?.filter(service => service.category === 'fitness') || [];
-  const foodServices = services?.filter(service => service.category === 'culinary') || [];
+  const trainingServices = services?.filter(service => service.category === 'training') || [];
+  const foodServices = services?.filter(service => service.category === 'food') || [];
 
   if (isLoading) {
     return (
@@ -95,15 +94,15 @@ const Services = () => {
             </div>
           )}
 
-          {/* Fitness Services */}
-          {fitnessServices.length > 0 && (
+          {/* Training Services */}
+          {trainingServices.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">
                 Fitness & Training
               </h2>
               
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {fitnessServices.slice(0, 3).map(service => (
+                {trainingServices.slice(0, 3).map(service => (
                   <ServiceCard 
                     key={service.id} 
                     service={{

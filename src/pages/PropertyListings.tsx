@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Heart, Map, ChevronRight } from 'lucide-react';
@@ -7,7 +6,7 @@ import BecomeHostPopup from '../components/BecomeHostPopup';
 import LanguagePopup from '../components/LanguagePopup';
 import { Button } from '@/components/ui/button';
 import { useProperties } from '@/hooks/useProperties';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 
 const PropertyListings = () => {
@@ -18,7 +17,8 @@ const PropertyListings = () => {
   const [showMap, setShowMap] = useState(false);
   
   const { data: allProperties, isLoading } = useProperties();
-  const { favorites, toggleFavorite } = useFavorites();
+  const { data: favorites } = useFavorites();
+  const { mutate: toggleFavorite } = useToggleFavorite();
 
   // Filter properties by location
   const properties = allProperties?.filter(property => 
@@ -138,41 +138,40 @@ const PropertyListings = () => {
                     onClick={(e) => {
                       e.preventDefault();
                       if (user) {
-                        toggleFavorite({ propertyId: property.id });
+                        toggleFavorite({ property_id: property.id });
                       }
                     }}
                     className="absolute top-3 right-3 p-2 hover:scale-110 transition-transform"
                   >
                     <Heart 
                       className={`w-6 h-6 ${
-                        favorites.some(f => f.property_id === property.id)
+                        favorites?.some(f => f.property_id === property.id)
                           ? 'fill-red-500 text-red-500' 
                           : 'fill-black/20 text-white'
-                      }`} 
-                    />
-                  </button>
-                </div>
-                
-                <div className="space-y-1">
-                  <div className="flex justify-between items-start">
-                    <h3 className="font-medium text-gray-900 group-hover:underline">{property.title}</h3>
-                    <div className="flex items-center">
-                      <span className="text-sm">⭐</span>
-                      <span className="text-sm font-medium ml-1">{property.rating || 4.5}</span>
-                      <span className="text-sm text-gray-500 ml-1">({property.review_count || 0})</span>
-                    </div>
+                    }`} 
+                  />
+                </button>
+              </div>
+              
+              <div className="space-y-1">
+                <div className="flex justify-between items-start">
+                  <h3 className="font-medium text-gray-900 group-hover:underline">{property.title}</h3>
+                  <div className="flex items-center">
+                    <span className="text-sm">⭐</span>
+                    <span className="text-sm font-medium ml-1">{property.rating || 4.5}</span>
+                    <span className="text-sm text-gray-500 ml-1">({property.review_count || 0})</span>
                   </div>
-                  <p className="text-gray-600 text-sm">{property.property_type} • {property.max_guests} guests</p>
-                  <p className="font-medium">
-                    <span className="text-gray-900">${property.price_per_night}</span>
-                    <span className="text-gray-600 font-normal"> night</span>
-                  </p>
                 </div>
-              </Link>
-            ))}
-          </div>
+                <p className="text-gray-600 text-sm">{property.property_type} • {property.max_guests} guests</p>
+                <p className="font-medium">
+                  <span className="text-gray-900">${property.price_per_night}</span>
+                  <span className="text-gray-600 font-normal"> night</span>
+                </p>
+              </div>
+            </Link>
+          ))}
         </div>
-      </main>
+      </div>
       
       <BecomeHostPopup 
         isOpen={showHostPopup} 

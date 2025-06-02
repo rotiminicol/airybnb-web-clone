@@ -1,15 +1,15 @@
-
 import { Heart, ChevronRight } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useProperties } from '@/hooks/useProperties';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
 import { useAuth } from '@/contexts/AuthContext';
 
 const FeaturedListings = () => {
   const { user } = useAuth();
   const { data: properties, isLoading } = useProperties();
-  const { favorites, toggleFavorite } = useFavorites();
+  const { data: favorites } = useFavorites();
+  const { mutate: toggleFavorite } = useToggleFavorite();
 
   if (isLoading) {
     return (
@@ -58,14 +58,14 @@ const FeaturedListings = () => {
           onClick={(e) => {
             e.preventDefault();
             if (user) {
-              toggleFavorite({ propertyId: property.id });
+              toggleFavorite({ property_id: property.id });
             }
           }}
           className="absolute top-3 right-3 p-2 hover:scale-110 transition-transform"
         >
           <Heart 
             className={`w-6 h-6 ${
-              favorites.some(f => f.property_id === property.id)
+              favorites?.some(f => f.property_id === property.id)
                 ? 'fill-red-500 text-red-500' 
                 : 'fill-black/20 text-white'
             }`} 

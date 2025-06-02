@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { Heart, Star, Share, ChevronLeft, ChevronRight } from 'lucide-react';
@@ -8,7 +7,7 @@ import LanguagePopup from '../components/LanguagePopup';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useProperty } from '@/hooks/useProperties';
-import { useFavorites } from '@/hooks/useFavorites';
+import { useFavorites, useToggleFavorite } from '@/hooks/useFavorites';
 import { useCreateBooking } from '@/hooks/useBookings';
 import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from '@/hooks/use-toast';
@@ -26,10 +25,11 @@ const PropertyDetail = () => {
   const [guests, setGuests] = useState(1);
 
   const { data: property, isLoading } = useProperty(id || '');
-  const { favorites, toggleFavorite } = useFavorites();
+  const { data: favorites } = useFavorites();
+  const { mutate: toggleFavorite } = useToggleFavorite();
   const { mutate: createBooking, isPending: isBooking } = useCreateBooking();
 
-  const isFavorite = favorites.some(f => f.property_id === id);
+  const isFavorite = favorites?.some(f => f.property_id === id);
 
   const handleBooking = () => {
     if (!user) {
@@ -61,7 +61,6 @@ const PropertyDetail = () => {
       check_out: checkOut,
       guests,
       total_price: totalPrice,
-      guest_id: user.id,
     });
   };
 
@@ -156,7 +155,7 @@ const PropertyDetail = () => {
               </Button>
               <Button 
                 variant="ghost" 
-                onClick={() => user && toggleFavorite({ propertyId: property.id })}
+                onClick={() => user && toggleFavorite({ property_id: property.id })}
                 className="flex items-center"
               >
                 <Heart className={`w-4 h-4 mr-2 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />

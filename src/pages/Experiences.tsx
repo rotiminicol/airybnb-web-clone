@@ -1,4 +1,3 @@
-
 import Header from '../components/Header';
 import Footer from '../components/Footer';
 import ExperienceCard from '../components/ExperienceCard';
@@ -16,7 +15,7 @@ const Experiences = () => {
   // Group experiences by location
   const londonExperiences = experiences?.filter(exp => exp.city.toLowerCase() === 'london') || [];
   const capeTownExperiences = experiences?.filter(exp => exp.city.toLowerCase() === 'cape town') || [];
-  const airbnbOriginals = experiences?.filter(exp => exp.category === 'adventure' || exp.category === 'culinary') || [];
+  const featuredExperiences = experiences?.filter(exp => exp.category === 'culture' || exp.category === 'food') || [];
 
   if (isLoading) {
     return (
@@ -124,14 +123,14 @@ const Experiences = () => {
           )}
 
           {/* Featured Experiences */}
-          {airbnbOriginals.length > 0 && (
+          {featuredExperiences.length > 0 && (
             <div className="mb-12">
               <h2 className="text-2xl font-semibold text-gray-900 mb-6">
                 Featured Experiences
               </h2>
               
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                {airbnbOriginals.slice(0, 2).map(experience => (
+                {featuredExperiences.slice(0, 2).map(experience => (
                   <div key={experience.id} className="group cursor-pointer">
                     <div className="relative mb-4">
                       <img 
